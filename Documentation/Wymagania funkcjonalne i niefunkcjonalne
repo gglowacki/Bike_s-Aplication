@@ -9,6 +9,7 @@ Wymagani funkcjonalne:
 - aplikacja musi zapewnić wyznaczenie drogi do najbliższej stacji z wolnym rowerem lub miejscem na rower(w zależności od statusu wypożyczenia)
 - aplikacja musi zapewnić możliwość zapisania numeru do blokady manualnej
 - aplikacja musi zapewnić monitorowanie historii wypożyeczeń użytkownika
+- aplikacja musi zapewnić informacje na temat kontaktu z infolinią
 
 Wymagania niefunkcjonalne:
 - aplikacja będzie wspierana przez wersję systemu Android 5.0 i wyżej
