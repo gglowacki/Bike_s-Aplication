@@ -1,0 +1,20 @@
+Wymagani funkcjonalne:
+- aplikacja musi zapewnić możliwość logowania się użytkowników
+- aplikacja musi zapewnić możliwość rejestrowania się użytowników
+- aplikacja musi zapewnić możliwość edytowania profilu zalogowanego użytkownika
+
+- aplikacja musi zapewnić wyświetlenie wszystkich stacji rowerowych na mapie
+- aplikacja musi zapewnić wyświetlenie dostępnych i zajętych miejsc w każdej stacji rowerowej
+- aplikacja musi zapewnić minitorowanie czasu wypożyczonego roweru
+- aplikacja musi zapewnić wyznaczenie drogi do najbliższej stacji z wolnym rowerem lub miejscem na rower(w zależności od statusu wypożyczenia)
+- aplikacja musi zapewnić możliwość zapisania numeru do blokady manualnej
+- aplikacja musi zapewnić monitorowanie historii wypożyeczeń użytkownika
+
+Wymagania niefunkcjonalne:
+- aplikacja będzie wspierana przez wersję systemu Android 5.0 i wyżej
+- czas łądowania sie aplikacji nie może być dłuższy niż 30 sekund
+- czas pobierania danych z serwera(API) nie powinien być dłuższy niż 30 sekund
+- hasła użytkowników nie mogą być trzymane jako zwykły tekst
+- rejestracja użytkownika od podania przez niego danych nie powinna przekraczać 10min
+- aplkiacja musi zapytać o zgodę użytkownika do geolokalizacji jego urządzenia
+- 
