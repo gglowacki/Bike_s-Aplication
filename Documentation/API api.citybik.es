@@ -1,4 +1,5 @@
-Aplikacja Bike_s korzystać będzie z danych udostępnianych przez inną aplikację. Pobieranie danych odbywać będzie się za pomocą API, które to udostępnia aplikacja CityBikes. Posiada ona wszystkie wymagane informacje, jakie potrzebne będą dla użytkownika.
+Aplikacja Bike_s korzystać będzie z danych udostępnianych przez inną aplikację. Pobieranie danych odbywać będzie się za pomocą API, 
+	które to udostępnia aplikacja CityBikes. Posiada ona wszystkie wymagane informacje, jakie potrzebne będą dla użytkownika.
 
 API dostarcza strukturę danych JSON, która to będzie przetwarzana przez aplikację i odpowiednio wyświetlana użytkownikowi.
 Komunikacja z protokołem dobywać będzie się za pomocą protokołu HTTP.
