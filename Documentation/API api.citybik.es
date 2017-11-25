@@ -1,6 +1,7 @@
 Aplikacja Bike_s korzystać będzie z danych udostępnianych przez inną aplikację. Pobieranie danych odbywać będzie się za pomocą API, które to udostępnia aplikacja CityBikes. Posiada ona wszystkie wymagane informacje, jakie potrzebne będą dla użytkownika.
 
-API dostarcza strukturę danych JSON, która to jest przetwarzana przez aplikację i odpowiednio wyświetlana użytkownikowi.
+API dostarcza strukturę danych JSON, która to będzie przetwarzana przez aplikację i odpowiednio wyświetlana użytkownikowi.
+Komunikacja z protokołem dobywać będzie się za pomocą protokołu HTTP.
 
 API udostępnia dwie podstawowe uporządkowane informacje:
 sieci – jest to wykaz większości firm na terenie całego świata, które obsługują rowery miejskie (https://api.citybik.es/v2/networks)
@@ -91,7 +92,8 @@ Struktura
 	}
 }
 
-Przykład{
+Przykład
+{
   "network": {
     "company": [
       "Nextbike GmbH"
@@ -153,3 +155,6 @@ latitude - szerokość geograficzna
 longitude - długość geograficzna
 name - nazwa stacji
 timestamp - data i czas ostatniego odświeżenia
+												 
+												 
+												 
