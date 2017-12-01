@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_data"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Twoje dane" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Ustawienia" />
+    </group>
+
+    <item android:title="Stacje">
+        <menu>
+            <item
+                android:id="@+id/nav_stations"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Pokaż stacje" />
+            <item
+                android:id="@+id/nav_nav"
+                android:icon="@drawable/ic_menu_send"
+                android:title="Nawiguj do stacji" />
+        </menu>
+    </item>
+
+</menu>
