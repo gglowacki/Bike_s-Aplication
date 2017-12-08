@@ -1,9 +1,12 @@
 package bike_s.arduino.bike_s;
 
+import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,7 +16,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -21,16 +32,19 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private String TAG = MainActivity.class.getSimpleName();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         //Fragment mapy w MainActivity
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -42,19 +56,56 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "cOŚ TAM", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "...", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        //=============JSON z API
+        //Jak na ten moment Fatal Error na API :|
+        //Oryginalny link:
+        // https://api.citybik.es/v2/networks/bike_s-srm-szczecin
+        // testuje na przykłądowym api
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="https://api.androidhive.info/contacts/";
+        StringRequest stringRequest = new StringRequest( Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObj = new JSONObject(response);
+                            JSONArray contacts = jsonObj.getJSONArray("contacts");
+
+                            for (int i = 0; i < contacts.length(); i++) {
+                                JSONObject c = contacts.getJSONObject( i );
+                                String email = c.getString( "email" );
+                                Log.e(TAG, "Pole email["+i+"]: " + email);//odpowiedź z API pola email
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Context context = getApplicationContext();
+                CharSequence text = "Błąd pobierania danych!";
+                int duration = Toast.LENGTH_SHORT;
+
+                Toast toast = Toast.makeText(context, text, duration);
+                toast.show();
+            }
+        });
+// Add the request to the RequestQueue.
+        queue.add(stringRequest);
+        //=============KONIEC JSONA z API
+
     }
 
     @Override
@@ -118,14 +169,15 @@ public class MainActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
         LatLng zut = new LatLng(53.4475413, 14.4919891);
+
         mMap.addMarker(new MarkerOptions().position(zut).title("Marker ZUTu"));
-        mMap.moveCamera( CameraUpdateFactory.newLatLng(zut));
+        mMap.moveCamera( CameraUpdateFactory.newLatLngZoom(zut,18));
     }
 
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
 
     }
+
 }
