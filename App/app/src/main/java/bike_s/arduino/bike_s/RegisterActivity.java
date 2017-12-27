@@ -43,13 +43,16 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void register(){
-        String email = etUserName.getText().toString();
+        String username = etUserName.getText().toString();
         String pass = etPass.getText().toString();
-        if(email.isEmpty() && pass.isEmpty()){
+        if(username.isEmpty() && pass.isEmpty()){
             displayToast("Username/password field empty");
         }else{
-            db.addUser(email,pass);
-            displayToast("User registered");
+            boolean isSuccessful = db.addUser(username,pass);
+            if(isSuccessful)
+                displayToast("User registered");
+            else
+                displayToast("User with that username exists, try different one");
             finish();
         }
     }

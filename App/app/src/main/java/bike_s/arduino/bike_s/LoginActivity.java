@@ -49,10 +49,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void login(){
-        String email = etUserName.getText().toString();
+        String username = etUserName.getText().toString();
         String pass = etPass.getText().toString();
 
-        if(db.getUser(email,pass)){
+        if(db.getUser(username,pass)){
             session.setLoggedin(true);
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();

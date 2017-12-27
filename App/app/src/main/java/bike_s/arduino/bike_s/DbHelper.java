@@ -3,6 +3,7 @@ package bike_s.arduino.bike_s;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -10,23 +11,21 @@ import android.util.Log;
 
 public class DbHelper extends SQLiteOpenHelper {
     public static final String TAG = DbHelper.class.getSimpleName();
-    public static final String DB_NAME = "myapp.db";
+    public static final String DB_NAME = "bikes_app.db";
     public static final int DB_VERSION = 1;
 
     public static final String USER_TABLE = "users";
-    public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_EMAIL = "email";
+    public static final String COLUMN_USERNAME = "username";
     public static final String COLUMN_PASS = "password";
-
+    private static final long ERROR_IND = -1;
     /*
     create table users(
         id integer primary key autoincrement,
-        email text,
+        username text primary key, unique,
         password text);
      */
-    public static final String CREATE_TABLE_USERS = "CREATE TABLE " + USER_TABLE + "("
-            + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + COLUMN_EMAIL + " TEXT,"
+    public static final String CREATE_TABLE_USERS = "CREATE TABLE IF NOT EXISTS " + USER_TABLE + "("
+            + COLUMN_USERNAME + " TEXT PRIMARY KEY UNIQUE,"
             + COLUMN_PASS + " TEXT);";
 
     public DbHelper(Context context) {
@@ -47,23 +46,29 @@ public class DbHelper extends SQLiteOpenHelper {
     /**
      * Storing user details in database
      * */
-    public void addUser(String email, String password) {
+    public boolean addUser(String username, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(COLUMN_EMAIL, email);
+        values.put(COLUMN_USERNAME, username);
         values.put(COLUMN_PASS, password);
-
-        long id = db.insert(USER_TABLE, null, values);
-        db.close();
-
-        Log.d(TAG, "user inserted" + id);
+        long id = db.insert(USER_TABLE,null,values);
+        if(id == ERROR_IND) {
+            Log.d(TAG, "User not inserted" + id);
+            db.close();
+            return false;
+        }
+        else{
+            Log.d(TAG, "User inserted" + id);
+            db.close();
+            return true;
+        }
     }
 
-    public boolean getUser(String email, String pass){
+    public boolean getUser(String username, String pass){
         //HashMap<String, String> user = new HashMap<String, String>();
         String selectQuery = "select * from  " + USER_TABLE + " where " +
-                COLUMN_EMAIL + " = " + "'"+email+"'" + " and " + COLUMN_PASS + " = " + "'"+pass+"'";
+                COLUMN_USERNAME + " = " + "'"+username+"'" + " and " + COLUMN_PASS + " = " + "'"+pass+"'";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
