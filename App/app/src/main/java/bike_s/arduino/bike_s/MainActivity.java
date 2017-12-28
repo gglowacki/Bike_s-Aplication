@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity
 
     private GoogleMap mMap;
     private String TAG = MainActivity.class.getSimpleName();
-    private Button btnLogout;
     private Session session;
 
     @Override
@@ -45,18 +44,10 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         session = new Session(this);
         if(!session.loggedin()){
             logout();
         }
-        btnLogout = (Button)findViewById(R.id.btnLogout);
-        btnLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                logout();
-            }
-        });
 
         //Fragment mapy w MainActivity
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -72,8 +63,6 @@ public class MainActivity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });
-
-
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -117,8 +106,6 @@ public class MainActivity extends AppCompatActivity
 // Add the request to the RequestQueue.
         queue.add(stringRequest);
         //=============KONIEC JSONA z API
-
-
     }
 
     @Override
@@ -159,20 +146,25 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_data) {
-            // Handle the camera action
-        } else if (id == R.id.nav_settings) {
-
-        } else if (id == R.id.nav_stations) {
-            Intent intent = new Intent(this, MapsActivity.class);
-            //EditText editText = (EditText) findViewById(R.id.editText);
-            // String message = editText.getText().toString();
-            //intent.putExtra(EXTRA_MESSAGE, message);
-            startActivity(intent);
-        } else if (id == R.id.nav_nav) {
-
+        switch(id)
+        {
+            case R.id.nav_stations:
+            {
+                Intent intent = new Intent(this, MapsActivity.class);
+                //EditText editText = (EditText) findViewById(R.id.editText);
+                // String message = editText.getText().toString();
+                //intent.putExtra(EXTRA_MESSAGE, message);
+                startActivity(intent);
+                break;
+            }
+            case R.id.btnLogout:
+            {
+                logout();
+                break;
+            }
+            default:
+                break;
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
