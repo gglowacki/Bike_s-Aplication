@@ -13,7 +13,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -35,7 +35,6 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
-    private GoogleMap mMap;
     private String TAG = MainActivity.class.getSimpleName();
     private Session session;
 
@@ -45,12 +44,14 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         session = new Session(this);
-        if(!session.loggedin()){
+        if(!session.loggedIn()){
             logout();
         }
 
-        //Fragment mapy w MainActivity
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        /*
+         * Fragment mapy w MainActivity
+         * Obtain the SupportMapFragment and get notified when the map is ready to be used.
+         */
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync( this);
@@ -64,15 +65,25 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        /*
+         *Aby wstawić cokolwiek do bocznego menu trzeba wykorzystać poniższy header w celu
+         *wykorzystania findViewById
+        */
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        View header = navigationView.getHeaderView(0);
         navigationView.setNavigationItemSelectedListener(this);
 
-        //=============JSON z API
-        //Jak na ten moment Fatal Error na API :|
-        //Oryginalny link:
-        // https://api.citybik.es/v2/networks/bike_s-srm-szczecin
-        // testuje na przykłądowym api
 
+        TextView userNameTextView = (TextView) header.findViewById(R.id.userName);
+        userNameTextView.setText(session.getUserName());
+
+        /*
+         * =============JSON z API
+         * Jak na ten moment Fatal Error na API :|
+         * Oryginalny link:
+         * https://api.citybik.es/v2/networks/bike_s-srm-szczecin
+         * testuje na przykłądowym api
+         */
         RequestQueue queue = Volley.newRequestQueue(this);
         String url ="https://api.androidhive.info/contacts/";
         StringRequest stringRequest = new StringRequest( Request.Method.GET, url,
@@ -103,7 +114,7 @@ public class MainActivity extends AppCompatActivity
                 toast.show();
             }
         });
-// Add the request to the RequestQueue.
+        // Add the request to the RequestQueue.
         queue.add(stringRequest);
         //=============KONIEC JSONA z API
     }
@@ -127,9 +138,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        /*
+         * Handle action bar item clicks here. The action bar will
+         * automatically handle clicks on the Home/Up button, so long
+         * as you specify a parent activity in AndroidManifest.xml.
+         */
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -152,7 +165,7 @@ public class MainActivity extends AppCompatActivity
             {
                 Intent intent = new Intent(this, MapsActivity.class);
                 //EditText editText = (EditText) findViewById(R.id.editText);
-                // String message = editText.getText().toString();
+                //String message = editText.getText().toString();
                 //intent.putExtra(EXTRA_MESSAGE, message);
                 startActivity(intent);
                 break;
@@ -172,7 +185,7 @@ public class MainActivity extends AppCompatActivity
 
     //Funkcja opowiedzialna za nadanie punktu na mapie
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
+        GoogleMap mMap = googleMap;
 
         LatLng zut = new LatLng(53.4475413, 14.4919891);
 
@@ -186,7 +199,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void logout(){
-        session.setLoggedin(false);
+        session.setLoggedIn(false, null);
         finish();
         startActivity(new Intent(MainActivity.this,LoginActivity.class));
     }

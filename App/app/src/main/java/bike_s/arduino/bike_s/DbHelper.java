@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-
 public class DbHelper extends SQLiteOpenHelper {
     public static final String TAG = DbHelper.class.getSimpleName();
     public static final String DB_NAME = "bikes_app.db";
@@ -18,10 +17,9 @@ public class DbHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PASS = "password";
     private static final long ERROR_IND = -1;
     /*
-    create table users(
-        id integer primary key autoincrement,
-        username text primary key, unique,
-        password text);
+     * create table users(
+     *    username text primary key, unique,
+     *    password text);
      */
     public static final String CREATE_TABLE_USERS = "CREATE TABLE IF NOT EXISTS " + USER_TABLE + "("
             + COLUMN_USERNAME + " TEXT PRIMARY KEY UNIQUE,"
@@ -42,9 +40,9 @@ public class DbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    /**
+    /*
      * Storing user details in database
-     * */
+     */
     public boolean addUser(String username, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -65,7 +63,6 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public boolean getUser(String username, String pass){
-        //HashMap<String, String> user = new HashMap<String, String>();
         String selectQuery = "select * from  " + USER_TABLE + " where " +
                 COLUMN_USERNAME + " = " + "'"+username+"'" + " and " + COLUMN_PASS + " = " + "'"+pass+"'";
 

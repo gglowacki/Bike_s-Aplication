@@ -14,12 +14,17 @@ public class Session {
         editor = prefs.edit();
     }
 
-    public void setLoggedin(boolean logggedin){
+    public void setLoggedIn(boolean logggedin, String userName){
         editor.putBoolean("loggedInmode",logggedin);
+        editor.putString("userName",userName);
         editor.commit();
     }
 
-    public boolean loggedin(){
+    public boolean loggedIn(){
         return prefs.getBoolean("loggedInmode", false);
+    }
+
+    public String getUserName(){
+        return prefs.getString("userName",null);
     }
 }
