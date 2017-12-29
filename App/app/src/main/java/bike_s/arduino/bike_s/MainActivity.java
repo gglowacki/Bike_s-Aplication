@@ -4,6 +4,8 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -14,6 +16,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,10 +45,43 @@ public class MainActivity extends AppCompatActivity
     ArrayList<HashMap<String, String>> stationList;
     private ProgressDialog pDialog;
 
+    //vars for timer
+    long timeInMilliseconds = 0L;
+    long timeSwapBuff = 0L;
+    long updatedTime = 0L;
+    private long startTime = 0L;
+    private Handler customHandler = new Handler();
+    private boolean timerRunning = false;
+
+    private TextView timerValue;
+    private ImageButton startTimer;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        timerValue = (TextView) findViewById(R.id.timerValue);
+        startTimer = (ImageButton) findViewById(R.id.timerStart);
+        timerValue.setVisibility( View.INVISIBLE );
+
+        startTimer.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View view) {
+                if (timerRunning == false){
+                    startTime = SystemClock.uptimeMillis();
+                customHandler.postDelayed( updateTimerThread, 0 );
+                timerValue.setVisibility( View.VISIBLE );
+                timerRunning = true;
+            }else{
+                    timerValue.setVisibility( View.INVISIBLE );
+                    timerRunning = false;
+            }
+
+            }
+        });
 
         session = new Session(this);
         if (!session.loggedIn()) {
@@ -59,15 +95,6 @@ public class MainActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "...", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         /*
          *Aby wstawić cokolwiek do bocznego menu trzeba wykorzystać poniższy header w celu
@@ -321,5 +348,31 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
+    private Runnable updateTimerThread = new Runnable() {
+
+        public void run() {
+
+            timeInMilliseconds = SystemClock.uptimeMillis() - startTime;
+
+            updatedTime = timeSwapBuff + timeInMilliseconds;
+
+            int secs = (int) (updatedTime / 1000);
+            int mins = secs / 60;
+            secs = secs % 60;
+            int milliseconds = (int) (updatedTime % 1000);
+            if(mins>= 20){
+                timerValue.setTextColor( 0xFFFF0000 );
+            }else if(mins>=15){
+                timerValue.setTextColor( 0xFFE37718 );
+            }else{
+                timerValue.setTextColor( 0xFF000000 );
+            }
+            timerValue.setText("" + mins + ":"
+                    + String.format("%02d", secs));
+            customHandler.postDelayed(this, 0);
+        }
+
+    };
 }
 

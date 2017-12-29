@@ -3,8 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/App.iml" filepath="$PROJECT_DIR$/App.iml" />
+      <module fileurl="file://C:\Users\Patryk\Desktop\repo bikes\Bike_s-Aplication\App\App.iml" filepath="C:\Users\Patryk\Desktop\repo bikes\Bike_s-Aplication\App\App.iml" />
       <module fileurl="file://C:\Users\Patryk\Desktop\Bike_s\Bike_s-Aplication\App\Bike_s.iml" filepath="C:\Users\Patryk\Desktop\Bike_s\Bike_s-Aplication\App\Bike_s.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\Patryk\Desktop\repo bikes\Bike_s-Aplication\App\app\app.iml" filepath="C:\Users\Patryk\Desktop\repo bikes\Bike_s-Aplication\App\app\app.iml" />
     </modules>
   </component>
 </project>
