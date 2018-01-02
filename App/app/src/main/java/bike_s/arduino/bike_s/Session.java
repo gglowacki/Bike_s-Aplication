@@ -7,6 +7,7 @@ public class Session {
     SharedPreferences prefs;
     SharedPreferences.Editor editor;
     Context ctx;
+    private String code2;
 
     public Session(Context ctx){
         this.ctx = ctx;
@@ -17,6 +18,7 @@ public class Session {
     public void setLoggedIn(boolean logggedin, String userName){
         editor.putBoolean("loggedInmode",logggedin);
         editor.putString("userName",userName);
+        editor.putInt("lockCode", 0);
         editor.commit();
     }
 
@@ -27,4 +29,11 @@ public class Session {
     public String getUserName(){
         return prefs.getString("userName",null);
     }
+
+    public void saveLockCombination(int code2){
+        editor.putInt("lockCode", code2);
+        editor.commit();
+    }
+
+    public int GetLockCombination(){ return prefs.getInt("lockCode", 0);}
 }
