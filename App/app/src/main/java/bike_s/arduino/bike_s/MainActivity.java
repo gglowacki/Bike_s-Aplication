@@ -1,8 +1,11 @@
 package bike_s.arduino.bike_s;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -11,18 +14,19 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +46,7 @@ import com.google.android.gms.tasks.Task;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,7 +73,12 @@ public class MainActivity extends AppCompatActivity
     private TextView timerValue;
     private ImageButton startTimer;
 
+    //lock vars
+    private ImageButton saveCode;
+    private String codeHolder;
 
+
+    final Context context2 = this;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +87,10 @@ public class MainActivity extends AppCompatActivity
                 .getFusedLocationProviderClient(this);
         timerValue = (TextView) findViewById(R.id.timerValue);
         startTimer = (ImageButton) findViewById(R.id.timerStart);
+        saveCode = (ImageButton) findViewById(R.id.saveCode);
         timerValue.setVisibility(View.INVISIBLE);
+
+        session = new Session(this);
 
         startTimer.setOnClickListener(new View.OnClickListener() {
 
@@ -90,12 +103,85 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     timerValue.setVisibility(View.INVISIBLE);
                     timerRunning = false;
+
                 }
 
             }
         });
 
-        session = new Session(this);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        View header = navigationView.getHeaderView(0);
+        final TextView codeRemind= (TextView) header.findViewById( R.id.codeRemind);
+
+        if(session.GetLockCombination() != 0){
+            codeRemind.setText( "Twój obecny kod: "+session.GetLockCombination() );
+        }else{
+            codeRemind.setText( "Brak ustawionego kodu zamka." );
+        }
+        saveCode.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View view) {
+                final Context context = getApplicationContext();
+
+                final int duration = Toast.LENGTH_SHORT;
+
+
+
+                View view2 = (LayoutInflater.from(MainActivity.this)).inflate(R.layout.code_input, null);
+
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
+                alertBuilder.setView(view2);
+                final EditText userInput = (EditText) view2.findViewById(R.id.userInput);
+                TextView currentCode = (TextView) view2.findViewById( R.id.currentCode );
+                if(session.GetLockCombination() == 0){
+                    currentCode.setText( "Brak ustawionego kodu zamka." );
+                }else{
+                    currentCode.setText( "Twój obecny kod: "+session.GetLockCombination() );
+                }
+
+                alertBuilder.setCancelable(true)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String aa = userInput.getText().toString();
+                                Toast toast;
+                                String text;
+                                if(!aa.isEmpty()) {
+                                    session.saveLockCombination( Integer.valueOf( aa ) );
+                                    text = "Twój kod został ustawiony: " + session.GetLockCombination();
+                                    toast = Toast.makeText( context, text, duration );
+                                    toast.show();
+
+                                }else{
+                                    if(session.GetLockCombination() == 0) {
+                                        text = "Pole było puste. Brak ustawionego kodu zamka.";
+                                    }else{
+                                        text = "Pole było puste. Twój kod to: "+ session.GetLockCombination();
+                                    }
+
+                                    toast = Toast.makeText( context, text, duration );
+                                    toast.show();
+
+                                }
+
+                                InputMethodManager imm = (InputMethodManager) getSystemService( Context.INPUT_METHOD_SERVICE );
+                                imm.toggleSoftInput( InputMethodManager.HIDE_NOT_ALWAYS, 0 );
+                                codeRemind.setText( "Twój obecny kod: " + session.GetLockCombination() );
+
+                            }
+                        });
+                Dialog dialog = alertBuilder.create();
+
+                dialog.show();
+                userInput.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+
+            }
+        });
+
+
         if (!session.loggedIn()) {
             logout();
         }
@@ -112,8 +198,7 @@ public class MainActivity extends AppCompatActivity
          *Aby wstawić cokolwiek do bocznego menu trzeba wykorzystać poniższy header w celu
          *wykorzystania findViewById
         */
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        View header = navigationView.getHeaderView(0);
+
         navigationView.setNavigationItemSelectedListener(this);
 
 
