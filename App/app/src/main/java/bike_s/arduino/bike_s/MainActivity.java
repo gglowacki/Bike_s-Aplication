@@ -1,14 +1,21 @@
 package bike_s.arduino.bike_s;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -20,12 +27,17 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +48,7 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
-
+    private FusedLocationProviderClient mFusedLocationProviderClient;
     private String TAG = MainActivity.class.getSimpleName();
     private Session session;
     GoogleMap mMap;
@@ -44,7 +56,7 @@ public class MainActivity extends AppCompatActivity
     private static String url = "https://api.citybik.es/v2/networks/bike_s-srm-szczecin";
     ArrayList<HashMap<String, String>> stationList;
     private ProgressDialog pDialog;
-
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1252;
     //vars for timer
     long timeInMilliseconds = 0L;
     long timeSwapBuff = 0L;
@@ -52,33 +64,33 @@ public class MainActivity extends AppCompatActivity
     private long startTime = 0L;
     private Handler customHandler = new Handler();
     private boolean timerRunning = false;
-
+    private static final int SCAN_STATION_DELAY_15MIN = 900000;
     private TextView timerValue;
     private ImageButton startTimer;
-
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        mFusedLocationProviderClient = LocationServices
+                .getFusedLocationProviderClient(this);
         timerValue = (TextView) findViewById(R.id.timerValue);
         startTimer = (ImageButton) findViewById(R.id.timerStart);
-        timerValue.setVisibility( View.INVISIBLE );
+        timerValue.setVisibility(View.INVISIBLE);
 
         startTimer.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View view) {
-                if (timerRunning == false){
+                if (timerRunning == false) {
                     startTime = SystemClock.uptimeMillis();
-                customHandler.postDelayed( updateTimerThread, 0 );
-                timerValue.setVisibility( View.VISIBLE );
-                timerRunning = true;
-            }else{
-                    timerValue.setVisibility( View.INVISIBLE );
+                    customHandler.postDelayed(updateTimerThread, 0);
+                    timerValue.setVisibility(View.VISIBLE);
+                    timerRunning = true;
+                } else {
+                    timerValue.setVisibility(View.INVISIBLE);
                     timerRunning = false;
-            }
+                }
 
             }
         });
@@ -108,49 +120,7 @@ public class MainActivity extends AppCompatActivity
         TextView userNameTextView = (TextView) header.findViewById(R.id.userName);
         userNameTextView.setText(session.getUserName());
 
-        stationList = new ArrayList<>();
-        new GetStations().execute();
-        /*
-         * =============JSON z API
-         * Jak na ten moment Fatal Error na API :|
-         * Oryginalny link:
-         * https://api.citybik.es/v2/networks/bike_s-srm-szczecin
-         * testuje na przykłądowym api
-         */
-       /* RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="https://api.androidhive.info/contacts/";
-        StringRequest stringRequest = new StringRequest( Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObj = new JSONObject(response);
-                            JSONArray contacts = jsonObj.getJSONArray("contacts");
-
-                            for (int i = 0; i < contacts.length(); i++) {
-                                JSONObject c = contacts.getJSONObject( i );
-                                String email = c.getString( "email" );
-                                Log.e(TAG, "Pole email["+i+"]: " + email);//odpowiedź z API pola email
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Context context = getApplicationContext();
-                CharSequence text = "Błąd pobierania danych!";
-                int duration = Toast.LENGTH_SHORT;
-
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
-            }
-        });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
-        //=============KONIEC JSONA z API
-        */
+        scanStations();
     }
 
     @Override
@@ -161,6 +131,20 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
+    }
+
+    public void scanStations() {
+        stationList = new ArrayList<>();
+        new GetStations().execute();
+
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new GetStations().execute();
+                handler.postDelayed(this, SCAN_STATION_DELAY_15MIN);
+            }
+        }, SCAN_STATION_DELAY_15MIN);
     }
 
     @Override
@@ -196,9 +180,6 @@ public class MainActivity extends AppCompatActivity
         switch (id) {
             case R.id.nav_stations: {
                 Intent intent = new Intent(this, MapsActivity.class);
-                //EditText editText = (EditText) findViewById(R.id.editText);
-                //String message = editText.getText().toString();
-                //intent.putExtra(EXTRA_MESSAGE, message);
                 startActivity(intent);
                 break;
             }
@@ -219,10 +200,67 @@ public class MainActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        LatLng zut = new LatLng(53.4475413, 14.4919891);
+        if (ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        } else { // no need to ask for permission
+            setCurrentLocation();
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                setCurrentLocation();
+            } else {
+                Log.e("Permission: ", "Permission not granted focus on default place");
+                setDefaultLocation();
+            }
+        }
+    }
+
+    private void setDefaultLocation(){
+        LatLng zut = new LatLng(53.4475413, 14.4919891);
         mMap.addMarker(new MarkerOptions().position(zut).title("Marker ZUTu"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zut, 18));
+    }
+
+    @SuppressLint("MissingPermission")
+    private void setCurrentLocation() {
+        mMap.setMyLocationEnabled(true);
+        /*
+         * Button może być przesunięty w inne miejsce w layoucie
+         * wykorzystac przez:
+         * View locationButton = ((View) mapView.findViewById(1).getParent()).findViewById(2);
+         */
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        getDeviceLocation();
+    }
+
+    private void getDeviceLocation() {
+        try {
+            Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
+            locationResult.addOnCompleteListener(new OnCompleteListener<Location>() {
+                @Override
+                public void onComplete(@NonNull Task<Location> task) {
+                    if (task.isSuccessful()) {
+                        // Set the map's camera position to the current location of the device.
+                        Location location = task.getResult();
+                        LatLng currentLatLng = new LatLng(location.getLatitude(),
+                                location.getLongitude());
+                        CameraUpdate update = CameraUpdateFactory
+                                .newLatLngZoom(currentLatLng, 18);
+                        mMap.moveCamera(update);
+                    }
+                }
+            });
+        } catch (SecurityException e) {
+            Log.e("Exception: %s", e.getMessage());
+        }
     }
 
     @Override
@@ -237,7 +275,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private class GetStations extends AsyncTask<Void, Void, Void> {
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -361,12 +398,12 @@ public class MainActivity extends AppCompatActivity
             int mins = secs / 60;
             secs = secs % 60;
             int milliseconds = (int) (updatedTime % 1000);
-            if(mins>= 20){
-                timerValue.setTextColor( 0xFFFF0000 );
-            }else if(mins>=15){
-                timerValue.setTextColor( 0xFFE37718 );
-            }else{
-                timerValue.setTextColor( 0xFF000000 );
+            if (mins >= 20) {
+                timerValue.setTextColor(0xFFFF0000);
+            } else if (mins >= 15) {
+                timerValue.setTextColor(0xFFE37718);
+            } else {
+                timerValue.setTextColor(0xFF000000);
             }
             timerValue.setText("" + mins + ":"
                     + String.format("%02d", secs));
