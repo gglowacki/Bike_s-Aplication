@@ -67,5 +67,18 @@
         app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/lock_icon" />
 
+    <ImageButton
+        android:id="@+id/navigateButton"
+        android:layout_width="85dp"
+        android:layout_height="70dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/map"
+        app:layout_constraintEnd_toStartOf="@+id/timerStart"
+        app:layout_constraintStart_toEndOf="@+id/saveCode"
+        app:srcCompat="@drawable/ic_nav" />
+
 
 </android.support.constraint.ConstraintLayout>
