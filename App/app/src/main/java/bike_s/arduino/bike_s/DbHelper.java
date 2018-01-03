@@ -11,7 +11,6 @@ public class DbHelper extends SQLiteOpenHelper {
     public static final String TAG = DbHelper.class.getSimpleName();
     public static final String DB_NAME = "bikes_app.db";
     public static final int DB_VERSION = 1;
-
     public static final String USER_TABLE = "users";
     public static final String COLUMN_USERNAME = "username";
     public static final String COLUMN_PASS = "password";
@@ -49,29 +48,27 @@ public class DbHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(COLUMN_USERNAME, username);
         values.put(COLUMN_PASS, password);
-        long id = db.insert(USER_TABLE,null,values);
-        if(id == ERROR_IND) {
+        long id = db.insert(USER_TABLE, null, values);
+        if (id == ERROR_IND) {
             Log.d(TAG, "User not inserted" + id);
             db.close();
             return false;
-        }
-        else{
+        } else {
             Log.d(TAG, "User inserted" + id);
             db.close();
             return true;
         }
     }
 
-    public boolean getUser(String username, String pass){
+    public boolean getUser(String username, String pass) {
         String selectQuery = "select * from  " + USER_TABLE + " where " +
-                COLUMN_USERNAME + " = " + "'"+username+"'" + " and " + COLUMN_PASS + " = " + "'"+pass+"'";
+                COLUMN_USERNAME + " = " + "'" + username + "'" + " and " + COLUMN_PASS + " = " + "'" + pass + "'";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
         // Move to first row
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
-
             return true;
         }
         cursor.close();

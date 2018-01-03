@@ -7,7 +7,6 @@ public class Session {
     SharedPreferences prefs;
     SharedPreferences.Editor editor;
     Context ctx;
-    private String code2;
 
     public Session(Context ctx){
         this.ctx = ctx;
@@ -35,5 +34,5 @@ public class Session {
         editor.commit();
     }
 
-    public int GetLockCombination(){ return prefs.getInt("lockCode", 0);}
+    public int getLockCombination(){ return prefs.getInt("lockCode", 0);}
 }

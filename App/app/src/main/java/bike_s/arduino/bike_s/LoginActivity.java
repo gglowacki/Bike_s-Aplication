@@ -9,11 +9,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
     private Button login, register;
     private EditText etUserName, etPass;
     private DbHelper db;
     private Session session;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,43 +22,43 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         db = new DbHelper(this);
         session = new Session(this);
-        login = (Button)findViewById(R.id.btnLogin);
-        register = (Button)findViewById(R.id.btnReg);
-        etUserName = (EditText)findViewById(R.id.etUserName);
-        etPass = (EditText)findViewById(R.id.etPass);
+        login = (Button) findViewById(R.id.btnLogin);
+        register = (Button) findViewById(R.id.btnReg);
+        etUserName = (EditText) findViewById(R.id.etUserName);
+        etPass = (EditText) findViewById(R.id.etPass);
         login.setOnClickListener(this);
         register.setOnClickListener(this);
 
-        if(session.loggedIn()){
-            startActivity(new Intent(LoginActivity.this,MainActivity.class));
+        if (session.loggedIn()) {
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
         }
     }
 
     @Override
     public void onClick(View v) {
-        switch(v.getId()){
+        switch (v.getId()) {
             case R.id.btnLogin:
                 login();
                 break;
             case R.id.btnReg:
-                startActivity(new Intent(LoginActivity.this,RegisterActivity.class));
+                startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
                 break;
             default:
 
         }
     }
 
-    private void login(){
+    private void login() {
         String username = etUserName.getText().toString();
         String pass = etPass.getText().toString();
 
-        if(db.getUser(username,pass)){
+        if (db.getUser(username, pass)) {
             session.setLoggedIn(true, username);
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
-        }else{
-            Toast.makeText(getApplicationContext(), "Wrong user name/password",Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Wrong user name/password", Toast.LENGTH_SHORT).show();
         }
     }
 }
