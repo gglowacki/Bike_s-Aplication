@@ -34,5 +34,5 @@ public class Session {
         editor.commit();
     }
 
-    public int getLockCombination(){ return prefs.getInt("lockCode", 0);}
+    public int GetLockCombination(){ return prefs.getInt("lockCode", 0);}
 }
