@@ -4,8 +4,6 @@ package bike_s.arduino.bike_s;
  * Created by Patryk on 03.01.2018.
  */
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;

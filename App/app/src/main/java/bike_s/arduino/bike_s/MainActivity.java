@@ -49,7 +49,6 @@ import com.google.android.gms.tasks.Task;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,174 +62,58 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
-    private FusedLocationProviderClient mFusedLocationProviderClient;
-    private String TAG = MainActivity.class.getSimpleName();
-    private Session session;
+
     GoogleMap mMap;
-    // URL to get contacts JSON
-    private static String url = "https://api.citybik.es/v2/networks/bike_s-srm-szczecin";
-    ArrayList<HashMap<String, String>> stationList;
-    private ProgressDialog pDialog;
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1252;
-    //vars for timer
-    long timeInMilliseconds = 0L;
-    long timeSwapBuff = 0L;
-    long updatedTime = 0L;
-    private long startTime = 0L;
-    private Handler customHandler = new Handler();
-    private boolean timerRunning = false;
-    private static final int SCAN_STATION_DELAY_15MIN = 900000;
+    private FusedLocationProviderClient mFusedLocationProviderClient;
+    private Session session;
     private TextView timerValue;
     private ImageButton startTimer;
-
-    //lock vars
-    private ImageButton saveCode;
-    private String codeHolder;
-
-    //navigation
     private ImageButton navigateButton;
+    private ImageButton saveCode;
+    private Handler customHandler = new Handler();
+    ArrayList<HashMap<String, String>> stationList;
+    private ProgressDialog pDialog;
+
+    private String TAG = MainActivity.class.getSimpleName();
+    private static String url = "https://api.citybik.es/v2/networks/bike_s-srm-szczecin";
+    private long timeInMilliseconds = 0L;
+    private long timeSwapBuff = 0L;
+    private long updatedTime = 0L;
+    private long startTime = 0L;
+    private boolean timerRunning = false;
+
     private LatLng lastSeen;
     private LatLng lastMarker;
 
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1252;
+    private static final int SCAN_STATION_DELAY_15MIN = 900000;
 
-    final Context context2 = this;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mFusedLocationProviderClient = LocationServices
                 .getFusedLocationProviderClient(this);
-        timerValue = (TextView) findViewById(R.id.timerValue);
-        startTimer = (ImageButton) findViewById(R.id.timerStart);
-        saveCode = (ImageButton) findViewById(R.id.saveCode);
-        timerValue.setVisibility(View.INVISIBLE);
-        navigateButton = (ImageButton) findViewById(R.id.navigateButton);
         session = new Session(this);
 
-        navigateButton.setOnClickListener(new View.OnClickListener() {
-
-            public void onClick(View view) {
-                mMap.clear();
-                scanStations();
-                final Context context = getApplicationContext();
-                final int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText( context, "Wyznaczono trasę...", duration );
-                toast.show();
-                LatLng origin = lastSeen;
-                LatLng dest = lastMarker;
-                // Getting URL to the Google Directions API
-                String url = getDirectionsUrl(origin, dest);
-                DownloadTask downloadTask = new DownloadTask();
-                // Start downloading json data from Google Directions API
-                downloadTask.execute(url);
-                navigateButton.setVisibility( View.INVISIBLE );
-            }
-        });
-
-        startTimer.setOnClickListener(new View.OnClickListener() {
-
-            public void onClick(View view) {
-                if (timerRunning == false) {
-                    startTime = SystemClock.uptimeMillis();
-                    customHandler.postDelayed(updateTimerThread, 0);
-                    timerValue.setVisibility(View.VISIBLE);
-                    timerRunning = true;
-                } else {
-                    timerValue.setVisibility(View.INVISIBLE);
-                    timerRunning = false;
-
-                }
-
-            }
-        });
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
         View header = navigationView.getHeaderView(0);
-        final TextView codeRemind= (TextView) header.findViewById( R.id.codeRemind);
+        TextView userNameTextView = (TextView) header.findViewById(R.id.userName);
+        userNameTextView.setText(session.getUserName());
 
-        if(session.GetLockCombination() != 0){
-            codeRemind.setText( "Twój obecny kod: "+session.GetLockCombination() );
-        }else{
-            codeRemind.setText( "Brak ustawionego kodu zamka." );
-        }
-        saveCode.setOnClickListener(new View.OnClickListener() {
-
-            public void onClick(View view) {
-                final Context context = getApplicationContext();
-
-                final int duration = Toast.LENGTH_SHORT;
-
-
-
-                View view2 = (LayoutInflater.from(MainActivity.this)).inflate(R.layout.code_input, null);
-
-                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
-                alertBuilder.setView(view2);
-                final EditText userInput = (EditText) view2.findViewById(R.id.userInput);
-                TextView currentCode = (TextView) view2.findViewById( R.id.currentCode );
-                if(session.GetLockCombination() == 0){
-                    currentCode.setText( "Brak ustawionego kodu zamka." );
-                }else{
-                    currentCode.setText( "Twój obecny kod: "+session.GetLockCombination() );
-                }
-
-                alertBuilder.setCancelable(true)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String aa = userInput.getText().toString();
-                                Toast toast;
-                                String text;
-                                if(!aa.isEmpty()) {
-                                    session.saveLockCombination( Integer.valueOf( aa ) );
-                                    text = "Twój kod został ustawiony: " + session.GetLockCombination();
-                                    toast = Toast.makeText( context, text, duration );
-                                    toast.show();
-
-                                }else{
-                                    if(session.GetLockCombination() == 0) {
-                                        text = "Pole było puste. Brak ustawionego kodu zamka.";
-                                    }else{
-                                        text = "Pole było puste. Twój kod to: "+ session.GetLockCombination();
-                                    }
-                                    toast = Toast.makeText( context, text, duration );
-                                    toast.show();
-                                }
-
-                                InputMethodManager imm = (InputMethodManager) getSystemService( Context.INPUT_METHOD_SERVICE );
-                                imm.toggleSoftInput( InputMethodManager.HIDE_NOT_ALWAYS, 0 );
-                                codeRemind.setText( "Twój obecny kod: " + session.GetLockCombination() );
-
-                            }
-                        });
-                Dialog dialog = alertBuilder.create();
-                dialog.show();
-                userInput.requestFocus();
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-
-            }
-        });
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         if (!session.loggedIn()) {
             logout();
         }
-        /*
-         * Fragment mapy w MainActivity
-         * Obtain the SupportMapFragment and get notified when the map is ready to be used.
-         */
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-        /*
-         *Aby wstawić cokolwiek do bocznego menu trzeba wykorzystać poniższy header w celu
-         *wykorzystania findViewById
-        */
-        navigationView.setNavigationItemSelectedListener(this);
-        TextView userNameTextView = (TextView) header.findViewById(R.id.userName);
-        userNameTextView.setText(session.getUserName());
+
         scanStations();
+        saveLockCode(header);
+        startTimer();
+        handleNavigationButton();
     }
 
     @Override
@@ -241,20 +124,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    public void scanStations() {
-        stationList = new ArrayList<>();
-        new GetStations().execute();
-
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                new GetStations().execute();
-                handler.postDelayed(this, SCAN_STATION_DELAY_15MIN);
-            }
-        }, SCAN_STATION_DELAY_15MIN);
     }
 
     @Override
@@ -305,6 +174,146 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                setCurrentLocation();
+            } else {
+                Log.e("Permission: ", "Permission not granted focus on default place");
+                setDefaultLocation();
+            }
+        }
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
+
+    public void scanStations() {
+        stationList = new ArrayList<>();
+        new GetStations().execute();
+
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new GetStations().execute();
+                handler.postDelayed(this, SCAN_STATION_DELAY_15MIN);
+            }
+        }, SCAN_STATION_DELAY_15MIN);
+    }
+
+    public void saveLockCode(View header) {
+        saveCode = (ImageButton) findViewById(R.id.saveCode);
+        final TextView codeRemind = (TextView) header.findViewById(R.id.codeRemind);
+
+        if (session.GetLockCombination() != 0) {
+            codeRemind.setText("Twój obecny kod: " + session.GetLockCombination());
+        } else {
+            codeRemind.setText("Brak ustawionego kodu zamka.");
+        }
+        saveCode.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                final Context context = getApplicationContext();
+                final int duration = Toast.LENGTH_SHORT;
+
+                View view2 = (LayoutInflater.from(MainActivity.this)).inflate(R.layout.code_input, null);
+
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
+                alertBuilder.setView(view2);
+                final EditText userInput = (EditText) view2.findViewById(R.id.userInput);
+                TextView currentCode = (TextView) view2.findViewById(R.id.currentCode);
+                if (session.GetLockCombination() == 0) {
+                    currentCode.setText("Brak ustawionego kodu zamka.");
+                } else {
+                    currentCode.setText("Twój obecny kod: " + session.GetLockCombination());
+                }
+
+                alertBuilder.setCancelable(true)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String aa = userInput.getText().toString();
+                                Toast toast;
+                                String text;
+                                if (!aa.isEmpty()) {
+                                    session.saveLockCombination(Integer.valueOf(aa));
+                                    text = "Twój kod został ustawiony: " + session.GetLockCombination();
+                                    toast = Toast.makeText(context, text, duration);
+                                    toast.show();
+
+                                } else {
+                                    if (session.GetLockCombination() == 0) {
+                                        text = "Pole było puste. Brak ustawionego kodu zamka.";
+                                    } else {
+                                        text = "Pole było puste. Twój kod to: " + session.GetLockCombination();
+                                    }
+                                    toast = Toast.makeText(context, text, duration);
+                                    toast.show();
+                                }
+
+                                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.toggleSoftInput(InputMethodManager.HIDE_NOT_ALWAYS, 0);
+                                codeRemind.setText("Twój obecny kod: " + session.GetLockCombination());
+
+                            }
+                        });
+                Dialog dialog = alertBuilder.create();
+                dialog.show();
+                userInput.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+
+            }
+        });
+    }
+
+    public void startTimer() {
+        timerValue = (TextView) findViewById(R.id.timerValue);
+        startTimer = (ImageButton) findViewById(R.id.timerStart);
+        timerValue.setVisibility(View.INVISIBLE);
+        startTimer.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View view) {
+                if (timerRunning == false) {
+                    startTime = SystemClock.uptimeMillis();
+                    customHandler.postDelayed(updateTimerThread, 0);
+                    timerValue.setVisibility(View.VISIBLE);
+                    timerRunning = true;
+                } else {
+                    timerValue.setVisibility(View.INVISIBLE);
+                    timerRunning = false;
+                }
+            }
+        });
+    }
+
+    public void handleNavigationButton() {
+        navigateButton = (ImageButton) findViewById(R.id.navigateButton);
+
+        navigateButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                mMap.clear();
+                scanStations();
+                final Context context = getApplicationContext();
+                final int duration = Toast.LENGTH_SHORT;
+                Toast toast = Toast.makeText(context, "Wyznaczono trasę...", duration);
+                toast.show();
+                LatLng origin = lastSeen;
+                LatLng dest = lastMarker;
+                // Getting URL to the Google Directions API
+                String url = getDirectionsUrl(origin, dest);
+                DownloadTask downloadTask = new DownloadTask();
+                // Start downloading json data from Google Directions API
+                downloadTask.execute(url);
+                navigateButton.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
 
     //Funkcja opowiedzialna za nadanie punktu na mapie
     public void onMapReady(GoogleMap googleMap) {
@@ -319,20 +328,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                setCurrentLocation();
-            } else {
-                Log.e("Permission: ", "Permission not granted focus on default place");
-                setDefaultLocation();
-            }
-        }
-    }
-
-    private void setDefaultLocation(){
+    private void setDefaultLocation() {
         LatLng zut = new LatLng(53.4475413, 14.4919891);
         mMap.addMarker(new MarkerOptions().position(zut).title("Marker ZUTu"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zut, 18));
@@ -373,11 +369,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
-
-    }
-
     private void logout() {
         session.setLoggedIn(false, null);
         finish();
@@ -394,7 +385,6 @@ public class MainActivity extends AppCompatActivity
             pDialog.setCancelable(false);
             pDialog.show();
         }
-
 
         @Override
         protected Void doInBackground(Void... arg0) {
@@ -495,7 +485,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public boolean onMarkerClick(Marker marker) {
                         lastMarker = marker.getPosition();
-                        navigateButton.setVisibility( View.VISIBLE );
+                        navigateButton.setVisibility(View.VISIBLE);
                         marker.showInfoWindow();
                         return true;
                     }
@@ -592,11 +582,11 @@ public class MainActivity extends AppCompatActivity
                 }
                 lineOptions.addAll(points);
                 lineOptions.width(12);
-                lineOptions.color( Color.RED);
+                lineOptions.color(Color.RED);
                 lineOptions.geodesic(true);
             }
 
-// Drawing polyline in the Google Map for the i-th route
+            // Drawing polyline in the Google Map for the i-th route
             mMap.addPolyline(lineOptions);
         }
     }
