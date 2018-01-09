@@ -42,6 +42,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -63,7 +64,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
-    GoogleMap mMap;
+    private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Session session;
     private TextView timerValue;
@@ -71,8 +72,9 @@ public class MainActivity extends AppCompatActivity
     private ImageButton navigateButton;
     private ImageButton saveCode;
     private Handler customHandler = new Handler();
-    ArrayList<HashMap<String, String>> stationList;
+    private ArrayList<HashMap<String, String>> stationList;
     private ProgressDialog pDialog;
+    private Polyline routePolyLine;
 
     private String TAG = MainActivity.class.getSimpleName();
     private static String url = "https://api.citybik.es/v2/networks/bike_s-srm-szczecin";
@@ -297,8 +299,9 @@ public class MainActivity extends AppCompatActivity
 
         navigateButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                mMap.clear();
-                scanStations();
+                if (routePolyLine != null) {
+                    routePolyLine.remove();
+                }
                 final Context context = getApplicationContext();
                 final int duration = Toast.LENGTH_SHORT;
                 Toast toast = Toast.makeText(context, "Wyznaczono trasę...", duration);
@@ -564,9 +567,8 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-            ArrayList points = null;
+            ArrayList points;
             PolylineOptions lineOptions = null;
-            MarkerOptions markerOptions = new MarkerOptions();
 
             for (int i = 0; i < result.size(); i++) {
                 points = new ArrayList();
@@ -585,9 +587,8 @@ public class MainActivity extends AppCompatActivity
                 lineOptions.color(Color.RED);
                 lineOptions.geodesic(true);
             }
-
             // Drawing polyline in the Google Map for the i-th route
-            mMap.addPolyline(lineOptions);
+            routePolyLine = mMap.addPolyline(lineOptions);
         }
     }
 
