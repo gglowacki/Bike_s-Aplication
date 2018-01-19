@@ -21,6 +21,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -160,8 +161,35 @@ public class MainActivity extends AppCompatActivity
 
         switch (id) {
             case R.id.nav_stations: {
-                Intent intent = new Intent(this, MapsActivity.class);
-                startActivity(intent);
+                final Context context = getApplicationContext();
+
+                View view2 = (LayoutInflater.from(MainActivity.this)).inflate(R.layout.stations, null);
+
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
+                alertBuilder.setView(view2);
+                final TextView stationsTextView = (TextView) view2.findViewById(R.id.stationsList);
+
+                alertBuilder.setCancelable(true)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+
+                            }
+                        });
+
+                String txt = "";
+                for (HashMap<String, String> map : stationList) {
+                    int freeBikes = Integer.parseInt(map.get("freeBikes"));
+                    int emptySlots = Integer.parseInt(map.get("emptySlots"));
+                    String name = map.get("name");
+                    txt = txt+"<b>"+ name+ "</b><br>Free bikes: " + freeBikes + " Empty slots: " + emptySlots+"<br><br>";
+                }
+                stationsTextView.setText( Html.fromHtml(txt) );
+                Dialog dialog = alertBuilder.create();
+                dialog.show();
+
                 break;
             }
             case R.id.btnLogout: {
@@ -568,7 +596,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
             ArrayList points;
-            PolylineOptions lineOptions = null;
+            PolylineOptions lineOptions = new PolylineOptions();
 
             for (int i = 0; i < result.size(); i++) {
                 points = new ArrayList();
