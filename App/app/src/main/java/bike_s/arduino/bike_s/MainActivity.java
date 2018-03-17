@@ -21,15 +21,18 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -161,35 +164,49 @@ public class MainActivity extends AppCompatActivity
 
         switch (id) {
             case R.id.nav_stations: {
-                final Context context = getApplicationContext();
-
                 View view2 = (LayoutInflater.from(MainActivity.this)).inflate(R.layout.stations, null);
-
+                final ArrayAdapter<String> stationsAdapter;
+                ArrayList<String> stationsInfo = new ArrayList<>();
                 AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
+                ListView stationsTextView = view2.findViewById(R.id.stationsList);
+                EditText stationSearch = view2.findViewById(R.id.stationSearch);
+
                 alertBuilder.setView(view2);
-                final TextView stationsTextView = (TextView) view2.findViewById(R.id.stationsList);
-
                 alertBuilder.setCancelable(true)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-
+                        .setPositiveButton("Zamknij", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-
-
                             }
                         });
 
-                String txt = "";
-                for (HashMap<String, String> map : stationList) {
-                    int freeBikes = Integer.parseInt(map.get("freeBikes"));
-                    int emptySlots = Integer.parseInt(map.get("emptySlots"));
-                    String name = map.get("name");
-                    txt = txt+"<b>"+ name+ "</b><br>Free bikes: " + freeBikes + " Empty slots: " + emptySlots+"<br><br>";
+                for (HashMap<String, String> station : stationList) {
+                    int freeBikes = Integer.parseInt(station.get("freeBikes"));
+                    int emptySlots = Integer.parseInt(station.get("emptySlots"));
+                    String stationName = station.get("name");
+                    stationsInfo.add( stationName + "\nWolne rowery: " + freeBikes + " Wolne miejsca: " + emptySlots);
                 }
-                stationsTextView.setText( Html.fromHtml(txt) );
+
+                stationsAdapter = new ArrayAdapter<String>(this, R.layout.station_row, stationsInfo);
+                stationsTextView.setAdapter(stationsAdapter);
+
+                stationSearch.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                        stationsAdapter.getFilter().filter(charSequence);
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) {
+
+                    }
+                });
                 Dialog dialog = alertBuilder.create();
                 dialog.show();
-
                 break;
             }
             case R.id.btnLogout: {

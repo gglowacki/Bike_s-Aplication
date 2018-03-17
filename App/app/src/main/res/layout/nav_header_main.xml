@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_alignStart="@+id/userName"
         android:layout_below="@+id/userName"
-        android:text="Dzisiaj przejechałeś: 3.4km" />
+        android:text="@string/dist_info" />
 
     <TextView
         android:id="@+id/codeRemind"

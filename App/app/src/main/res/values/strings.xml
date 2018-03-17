@@ -8,4 +8,13 @@
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_register">RegisterActivity</string>
+    <string name="search_station">Szukaj stacji..</string>
+    <string name="dist_info">Dzisiaj przejechałeś: 3.4km</string>
+    <string name="tw_j_kod">Twój kod:</string>
+    <string name="appName">Bike_s Application</string>
+    <string name="user_name">User Name</string>
+    <string name="register">Register</string>
+    <string name="back_to_login">Back to login</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
 </resources>
