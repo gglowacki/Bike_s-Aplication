@@ -29,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -38,7 +39,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity
     private ImageButton navigateButton;
     private ImageButton saveCode;
     private Handler customHandler = new Handler();
-    private ArrayList<HashMap<String, String>> stationList;
+    private ArrayList<Station> stationList;
     private ProgressDialog pDialog;
     private Polyline routePolyLine;
 
@@ -164,11 +164,11 @@ public class MainActivity extends AppCompatActivity
 
         switch (id) {
             case R.id.nav_stations: {
-                View view2 = (LayoutInflater.from(MainActivity.this)).inflate(R.layout.stations, null);
-                final ArrayAdapter<String> stationsAdapter;
-                ArrayList<String> stationsInfo = new ArrayList<>();
-                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
-                ListView stationsTextView = view2.findViewById(R.id.stationsList);
+                final View view2 = (LayoutInflater.from(MainActivity.this)).inflate(R.layout.stations, null);
+                final ArrayAdapter<Station> stationsAdapter;
+                ArrayList<Station> stationsInfo = new ArrayList<>();
+                final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
+                ListView stationsListView = view2.findViewById(R.id.stationsList);
                 EditText stationSearch = view2.findViewById(R.id.stationSearch);
 
                 alertBuilder.setView(view2);
@@ -178,17 +178,14 @@ public class MainActivity extends AppCompatActivity
                             public void onClick(DialogInterface dialog, int which) {
                             }
                         });
+                final Dialog dialog = alertBuilder.create();
+                dialog.show();
 
-                for (HashMap<String, String> station : stationList) {
-                    int freeBikes = Integer.parseInt(station.get("freeBikes"));
-                    int emptySlots = Integer.parseInt(station.get("emptySlots"));
-                    String stationName = station.get("name");
-                    stationsInfo.add( stationName + "\nWolne rowery: " + freeBikes + " Wolne miejsca: " + emptySlots);
+                for (Station station : stationList) {
+                   stationsInfo.add(station);
                 }
-
-                stationsAdapter = new ArrayAdapter<String>(this, R.layout.station_row, stationsInfo);
-                stationsTextView.setAdapter(stationsAdapter);
-
+                stationsAdapter = new ArrayAdapter<Station>(this, R.layout.station_row, stationsInfo);
+                stationsListView.setAdapter(stationsAdapter);
                 stationSearch.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -205,8 +202,16 @@ public class MainActivity extends AppCompatActivity
 
                     }
                 });
-                Dialog dialog = alertBuilder.create();
-                dialog.show();
+
+                stationsListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        Station s = (Station)adapterView.getAdapter().getItem(i);
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                new LatLng(s.getLatitude(), s.getLongitude()), 18));
+                        dialog.dismiss();
+                    }
+                });
                 break;
             }
             case R.id.btnLogout: {
@@ -405,10 +410,8 @@ public class MainActivity extends AppCompatActivity
                         Location location = task.getResult();
                         LatLng currentLatLng = new LatLng(location.getLatitude(),
                                 location.getLongitude());
-                        CameraUpdate update = CameraUpdateFactory
-                                .newLatLngZoom(currentLatLng, 18);
                         lastSeen = currentLatLng;
-                        mMap.moveCamera(update);
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18));
                     }
                 }
             });
@@ -483,30 +486,14 @@ public class MainActivity extends AppCompatActivity
         }
 
         protected void getData(JSONObject c) throws JSONException {
-            String emptySlots = c.getString("empty_slots");
-            String freeBikes = c.getString("free_bikes");
-            String lat = c.getString("latitude");
-            String lng = c.getString("longitude");
             String name = c.getString("name");
+            Integer emptySlots = c.getInt("empty_slots");
+            Integer freeBikes = c.getInt("free_bikes");
+            Double lat = c.getDouble("latitude");
+            Double lng = c.getDouble("longitude");
+            Station st = new Station(name, lat, lng, emptySlots, freeBikes);
 
-            //JSONObject extra = c.getJSONObject("extra");
-            // String number = extra.getString("number");
-            //String slots = extra.getString("slots");
-            //String uid = extra.getString("uid");
-
-            // tmp hash map for single station
-            HashMap<String, String> station = new HashMap<>();
-
-            // adding each child node to HashMap key => value
-            //station.put("uid", uid);
-            station.put("name", name);
-            station.put("emptySlots", emptySlots);
-            station.put("freeBikes", freeBikes);
-            station.put("lat", lat);
-            station.put("lng", lng);
-            //station.put("number", number);
-            //station.put("slots", slots);
-            stationList.add(station);
+            stationList.add(st);
         }
 
         @Override
@@ -518,16 +505,12 @@ public class MainActivity extends AppCompatActivity
             /**
              * Updating parsed JSON data into ListView
              * */
-            for (HashMap<String, String> map : stationList) {
-                double lat = Double.parseDouble(map.get("lat"));
-                double lng = Double.parseDouble(map.get("lng"));
-                int freeBikes = Integer.parseInt(map.get("freeBikes"));
-                int emptySlots = Integer.parseInt(map.get("emptySlots"));
-                String name = map.get("name");
+            for (Station station : stationList) {
                 mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(lat, lng))
-                        .title(name)
-                        .snippet("Free bikes: " + freeBikes + " Empty slots: " + emptySlots));
+                        .position(new LatLng(station.getLatitude(), station.getLongitude()))
+                        .title(station.getName())
+                        .snippet("Wolne rowery: " + station.getFreeBikes() +
+                                " Wolne miejsca: " + station.getEmptySlots()));
                 mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
 
                     @Override
